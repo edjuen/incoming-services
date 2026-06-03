@@ -19,6 +19,11 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
     use HasRoles;
 
+    public function canAccessPanel(Panel $panel): bool
+    {
+    	return str_ends_with($this->email, '@example.com');
+    }
+
     /**
      * Get the attributes that should be cast.
      *
