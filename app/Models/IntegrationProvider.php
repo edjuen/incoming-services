@@ -19,6 +19,9 @@ class IntegrationProvider extends Model
         'settings',
         'description',
         'is_active',
+	'access_token',
+	'token_expires_at',
+	'last_login_at',
     ];
 
     protected $casts = [
@@ -26,6 +29,9 @@ class IntegrationProvider extends Model
         'settings' => 'array',
         'password' => 'encrypted',
         'secret_key' => 'encrypted',
+	'access_token' => 'encrypted',
+	'token_expires_at' => 'datetime',
+	'last_login_at' => 'datetime',
     ];
 
     public function insuranceCompany()

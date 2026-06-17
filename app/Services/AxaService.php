@@ -59,9 +59,17 @@ class AxaService
 	        'password' => $this->integration->password,
     		]);
 
-        $response->throw();
+	$response->throw();
 
-        return $response->json('token');
+        $token = $response->json('token');
+
+	$this->integration->update([
+	    'access_token' => $token,
+	    'token_expires_at' => now()->addMinutes(14),
+	    'last_login_at' => now(),
+	]);
+
+        return $token;
     }
 
     public function getServices(): array
@@ -70,7 +78,7 @@ class AxaService
             return $this->fakeServices();
         }
 
-	$token = $this->login();
+	$token = $this->getToken();
 
         $settings = $this->settings();
 
@@ -88,6 +96,19 @@ class AxaService
         $response->throw();
 
         return $response->json() ?? [];
+    }
+
+    public function getToken(): string
+    {
+    	if (
+    	    $this->integration->access_token &&
+    	    $this->integration->token_expires_at &&
+    	    $this->integration->token_expires_at->isFuture()
+    	) {
+    	    return $this->integration->access_token;
+    	}
+
+    	return $this->login();
     }
 
     public function getIntegration(): IntegrationProvider
@@ -191,7 +212,7 @@ class AxaService
             ];
         }
 
-        $token = $this->login();
+        $token = $this->getToken();
 
         $response = Http::withoutVerifying()
             ->withToken($token)
@@ -299,7 +320,7 @@ public function contactService(Service $service): array
         ];
     }
 
-    $token = $this->login();
+    $token = $this->getToken();
 
     $response = Http::withoutVerifying()
         ->withToken($token)
@@ -310,7 +331,7 @@ public function contactService(Service $service): array
 	$this->logIntegration([
 	    'service_id' => $service->id,
 	    'direction' => 'outgoing',
-	    'action' => 'accept',
+	    'action' => 'contact',
 	    'endpoint' => '/status/Contacto',
 	    'status_code' => $response->status(),
 	    'success' => true,
@@ -380,8 +401,8 @@ public function finishService(Service $service): array
 	    $this->logIntegration([
 		    'service_id' => $service->id,
 		    'direction' => 'outgoing',
-		    'action' => 'accept',
-		    'endpoint' => '/status/Aceptacion',
+		    'action' => 'finish',
+		    'endpoint' => '/status/Finalizacion',
 		    'status_code' => 200,
 		    'success' => true,
 		    'request_payload' => $payload,
@@ -398,7 +419,7 @@ public function finishService(Service $service): array
         ];
     }
 
-    $token = $this->login();
+    $token = $this->getToken();
 
     $response = Http::withoutVerifying()
         ->withToken($token)
@@ -465,8 +486,8 @@ public function cancelService(Service $service, string $rejectCode): array
 	    $this->logIntegration([
 		    'service_id' => $service->id,
 		    'direction' => 'outgoing',
-		    'action' => 'accept',
-		    'endpoint' => '/status/Aceptacion',
+		    'action' => 'cancel',
+		    'endpoint' => '/status/RechazoCancelacion',
 		    'status_code' => 200,
 		    'success' => true,
 		    'request_payload' => $payload,
@@ -483,7 +504,7 @@ public function cancelService(Service $service, string $rejectCode): array
         ];
     }
 
-    $token = $this->login();
+    $token = $this->getToken();
 
     $response = Http::withoutVerifying()
         ->withToken($token)
