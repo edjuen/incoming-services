@@ -165,7 +165,7 @@ class AxaService
             'minutosArribo' => (int) ($service->estimated_arrival_minutes ?? 30),
             'unidadProveedor' => [
                 'marca' => $unit->brand,
-                'modelo' => $unit->year ?? $unit->model,
+                'modelo' => $unit->year,
                 'color' => $unit->color,
                 'placas' => $unit->plates,
                 'chasis' => $unit->vin,
@@ -228,7 +228,7 @@ class AxaService
 	    'status_code' => $response->status(),
 	    'success' => true,
 	    'request_payload' => $payload,
-	    'response_payload' => $response->json(),
+	    'response_payload' => ['body' => $response->json() ?? $response->body(),],
 	]);
 
         $reference->update([
@@ -246,7 +246,10 @@ class AxaService
 
 
 
-        return $response->json() ?? [];
+        return [
+	    'status' => $response->status(),
+	    'body' => $response->json() ?? $response->body(),
+	];
     }
 
 public function contactService(Service $service): array
@@ -271,7 +274,7 @@ public function contactService(Service $service): array
 
         'unidadProveedor' => [
             'marca' => $unit->brand,
-            'modelo' => $unit->year ?? $unit->model,
+            'modelo' => $unit->year,
             'color' => $unit->color,
             'placas' => $unit->plates,
             'chasis' => $unit->vin,
@@ -336,7 +339,7 @@ public function contactService(Service $service): array
 	    'status_code' => $response->status(),
 	    'success' => true,
 	    'request_payload' => $payload,
-	    'response_payload' => $response->json(),
+	    'response_payload' => ['body' => $response->json() ?? $response->body(),],
 	]);
 
     $reference->update([
@@ -374,7 +377,7 @@ public function finishService(Service $service): array
         'horaFin' => now()->format('H:i:s'),
         'unidadProveedor' => [
             'marca' => $unit->brand,
-            'modelo' => $unit->year ?? $unit->model,
+            'modelo' => $unit->year,
             'color' => $unit->color,
             'placas' => $unit->plates,
             'chasis' => $unit->vin,
@@ -435,7 +438,7 @@ public function finishService(Service $service): array
 	    'status_code' => $response->status(),
 	    'success' => true,
 	    'request_payload' => $payload,
-	    'response_payload' => $response->json(),
+	    'response_payload' => ['body' => $response->json() ?? $response->body(),],
 	]);
 
     $reference->update(['external_status' => 'finished']);
@@ -520,7 +523,7 @@ public function cancelService(Service $service, string $rejectCode): array
 	    'status_code' => $response->status(),
 	    'success' => true,
 	    'request_payload' => $payload,
-	    'response_payload' => $response->json(),
+	    'response_payload' => ['body' => $response->json() ?? $response->body(),],
 	]);
 
     $reference->update(['external_status' => 'cancelled']);
