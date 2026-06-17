@@ -43,7 +43,10 @@ class ServicesTable
 		    ->label('Aseguradora')
 		    ->searchable()
 		    ->sortable(),
-
+		TextColumn::make('integrationProvider.name')
+		    ->label('Integración')
+		    ->sortable()
+		    ->searchable(),
 		TextColumn::make('serviceType.name')
 		    ->label('Tipo de servicio')
 		    ->searchable()

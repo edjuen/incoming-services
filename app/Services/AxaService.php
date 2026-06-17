@@ -12,11 +12,12 @@ class AxaService
 {
     protected IntegrationProvider $integration;
 
-    public function __construct()
+    public function __construct(?IntegrationProvider $integration = null)
     {
-        $this->integration = IntegrationProvider::where('code', 'AXA_QA')
-            ->where('is_active', true)
-            ->firstOrFail();
+    	$this->integration = $integration
+    	    ?? IntegrationProvider::where('code', 'AXA_QA')
+    	        ->where('is_active', true)
+    	        ->firstOrFail();
     }
 
     public function isMock(): bool
@@ -87,6 +88,11 @@ class AxaService
         $response->throw();
 
         return $response->json() ?? [];
+    }
+
+    public function getIntegration(): IntegrationProvider
+    {
+        return $this->integration;
     }
 
     public function fakeServices(): array

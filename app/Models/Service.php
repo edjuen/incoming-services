@@ -26,6 +26,7 @@ class Service extends Model
 	'unit_id',
 	'estimated_arrival_minutes',
         'notes',
+	'integration_provider_id',
     ];
 
     public function insuranceCompany()
@@ -41,6 +42,11 @@ class Service extends Model
     public function provider()
     {
         return $this->belongsTo(Provider::class);
+    }
+
+    public function integrationProvider()
+    {
+	return $this->belongsTo(IntegrationProvider::class);
     }
 
     public function events()

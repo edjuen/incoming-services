@@ -10,6 +10,7 @@ class IntegrationProvider extends Model
         'insurance_company_id',
         'name',
         'code',
+	'driver',
         'base_url',
         'public_key',
         'secret_key',
@@ -31,6 +32,12 @@ class IntegrationProvider extends Model
     {
         return $this->belongsTo(InsuranceCompany::class);
     }
+
+    public function services()
+    {
+        return $this->hasMany(Service::class);
+    }
+
 }
 
 

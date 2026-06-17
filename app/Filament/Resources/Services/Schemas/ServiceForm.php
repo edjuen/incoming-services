@@ -38,6 +38,12 @@ Select::make('operator_id')
     ->searchable()
     ->preload(),
 
+Select::make('integration_provider_id')
+    ->relationship('integrationProvider', 'name')
+    ->label('Integración')
+    ->searchable()
+    ->preload(),
+
 Select::make('unit_id')
     ->label('Unidad')
     ->relationship('unit', 'unit_key')

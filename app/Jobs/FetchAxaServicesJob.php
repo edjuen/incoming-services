@@ -15,8 +15,20 @@ class FetchAxaServicesJob implements ShouldQueue
 {
     use Queueable;
 
-    public function handle(AxaService $axaService): void
+    public function __construct(
+        public ?int $integrationProviderId = null
+    ) {}
+
+    public function handle(): void
     {
+	$integration = \App\Models\IntegrationProvider::find($this->integrationProviderId);
+
+	if (! $integration || ! $integration->is_active) {
+	    return;
+        }
+
+        $axaService = new AxaService($integration);
+
         try {
     	    $axaServices = $axaService->getServices();
 	} catch (\Throwable $e) {
@@ -59,6 +71,7 @@ class FetchAxaServicesJob implements ShouldQueue
                 'vehicle' => trim(($axaItem['marca'] ?? '') . ' ' . ($axaItem['modelo'] ?? '') . ' ' . ($axaItem['anio'] ?? '') . ' ' . ($axaItem['placas'] ?? '')),
                 'status' => 'new',
                 'notes' => trim(($axaItem['problema'] ?? '') . "\n" . ($axaItem['comentarios'] ?? '')),
+		'integration_provider_id' => $integration->id,
             ]);
 
             ServiceExternalReference::create([

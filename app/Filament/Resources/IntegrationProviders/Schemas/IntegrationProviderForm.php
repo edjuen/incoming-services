@@ -30,6 +30,17 @@ class IntegrationProviderForm
                     ->required()
                     ->maxLength(255),
 
+		Select::make('driver')
+		    ->label('Driver')
+		    ->options([
+		        'axa' => 'AXA',
+		        'gnp' => 'GNP',
+		        'qualitas' => 'Qualitas',
+		        'glpi' => 'GLPI',
+		        'manual' => 'Manual',
+		    ])
+		    ->required(),
+
                 TextInput::make('base_url')
                     ->label('URL Base')
                     ->url()

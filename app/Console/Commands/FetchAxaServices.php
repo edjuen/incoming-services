@@ -13,40 +13,17 @@ class FetchAxaServices extends Command
 
     public function handle(): int
     {
-        FetchAxaServicesJob::dispatchSync();
+    	$integrations = \App\Models\IntegrationProvider::query()
+    	    ->where('is_active', true)
+    	    ->where('code', 'like', 'AXA%')
+    	    ->get();
 
-        $this->info('Consulta AXA ejecutada correctamente.');
+    	foreach ($integrations as $integration) {
+    	    FetchAxaServicesJob::dispatchSync($integration->id);
+    	}
 
-        return self::SUCCESS;
+    	$this->info('Consulta AXA ejecutada para ' . $integrations->count() . ' integraciones activas.');
+
+    	return self::SUCCESS;
     }
 }
-
-
-
-
-/*<?php
-
-namespace App\Console\Commands;
-
-use Illuminate\Console\Attributes\Description;
-use Illuminate\Console\Attributes\Signature;
-use Illuminate\Console\Command;
-
-#[Signature('app:fetch-axa-services')]
-#[Description('Command description')]
-class FetchAxaServices extends Command
-{
-    protected $signature = 'app:fetch-axa-services';
-
-    protected $description = 'Consulta servicios nuevos desde AXA';
-
-    public function handle(): int
-    {
-        FetchAxaServicesJob::dispatchSync();
-
-        $this->info('Consulta AXA ejecutada correctamente.');
-
-        return self::SUCCESS;
-    }
-}
-*/
