@@ -285,8 +285,7 @@ public function contactService(Service $service): array
             'apellidoPaterno' => $operator->last_name,
             'apellidoMaterno' => $operator->second_last_name,
         ],
-        'claveProveedor' => $reference->payload['claveProveedor'] ?? null,
-        'claveOperador' => $operator->operator_key,
+        'claveOperador' => $reference->payload['claveProveedor'] ?? null,
     ];
 
     if ($this->isMock()) {
@@ -387,8 +386,7 @@ public function finishService(Service $service): array
             'apellidoPaterno' => $operator->last_name,
             'apellidoMaterno' => $operator->second_last_name,
         ],
-	'claveProveedor' => $reference->payload['claveProveedor'] ?? null,
-        'claveOperador' => $operator->operator_key,
+        'claveOperador' => $reference->payload['claveProveedor'] ?? null,
     ];
 
     if ($this->isMock()) {
