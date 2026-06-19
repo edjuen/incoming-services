@@ -285,7 +285,7 @@ public function contactService(Service $service): array
             'apellidoPaterno' => $operator->last_name,
             'apellidoMaterno' => $operator->second_last_name,
         ],
-
+        'claveProveedor' => $reference->payload['claveProveedor'] ?? null,
         'claveOperador' => $operator->operator_key,
     ];
 
@@ -387,6 +387,7 @@ public function finishService(Service $service): array
             'apellidoPaterno' => $operator->last_name,
             'apellidoMaterno' => $operator->second_last_name,
         ],
+	'claveProveedor' => $reference->payload['claveProveedor'] ?? null,
         'claveOperador' => $operator->operator_key,
     ];
 
