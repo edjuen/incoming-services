@@ -243,9 +243,6 @@ class AxaService
             'new_status' => $service->status,
         ]);
 
-
-
-
         return [
 	    'status' => $response->status(),
 	    'body' => $response->json() ?? $response->body(),
@@ -353,7 +350,10 @@ public function contactService(Service $service): array
         'new_status' => $service->status,
     ]);
 
-    return $response->json() ?? [];
+    return [
+	    'status' => $response->status(),
+	    'body' => $response->json() ?? $response->body(),
+	];
 }
 
 public function finishService(Service $service): array
@@ -450,7 +450,10 @@ public function finishService(Service $service): array
         'new_status' => $service->status,
     ]);
 
-    return $response->json() ?? [];
+    return [
+	    'status' => $response->status(),
+	    'body' => $response->json() ?? $response->body(),
+	];
 }
 
 public function cancelService(Service $service, string $rejectCode): array
@@ -535,7 +538,10 @@ public function cancelService(Service $service, string $rejectCode): array
         'new_status' => $service->status,
     ]);
 
-    return $response->json() ?? [];
+    return [
+	    'status' => $response->status(),
+	    'body' => $response->json() ?? $response->body(),
+	];
 }
 
 protected function logIntegration(array $data): void
