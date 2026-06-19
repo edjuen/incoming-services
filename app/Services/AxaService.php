@@ -269,7 +269,7 @@ public function contactService(Service $service): array
         'expediente' => $reference->external_case_number,
         'idServicio' => (int) $reference->external_service_id,
         'idServicioProveedor' => (int) $reference->external_provider_service_id,
-        'horaContacto' => now()->format('H:i:s'),
+        'horaContacto' => now()->format('H:i'),
         'codigo' => 'GR',
 
         'unidadProveedor' => [
@@ -374,7 +374,7 @@ public function finishService(Service $service): array
         'expediente' => $reference->external_case_number,
         'idServicio' => (int) $reference->external_service_id,
         'idServicioProveedor' => (int) $reference->external_provider_service_id,
-        'horaFin' => now()->format('H:i:s'),
+        'horaFin' => now()->format('H:i'),
         'unidadProveedor' => [
             'marca' => $unit->brand,
             'modelo' => $unit->year,
