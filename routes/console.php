@@ -7,5 +7,7 @@ use Illuminate\Support\Facades\Schedule;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
-//Schedule::command('axa:fetch-services')->everyMinute();
-Schedule::command('app:poll-integrations')->everyMinute();
+
+Schedule::command('app:poll-integrations')
+    ->everyTenSeconds()
+    ->withoutOverlapping();

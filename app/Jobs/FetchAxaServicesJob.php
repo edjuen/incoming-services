@@ -9,6 +9,7 @@ use App\Services\AxaService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Filament\Notifications\Notification;
+use App\Notifications\NewServiceReceivedNotification;
 use App\Models\User;
 
 class FetchAxaServicesJob implements ShouldQueue
@@ -92,11 +93,7 @@ class FetchAxaServicesJob implements ShouldQueue
             ]);
 
 	    foreach (User::all() as $user) {
-	    	Notification::make()
-	    	    ->title('Nuevo servicio recibido')
-	    	    ->body('Folio: ' . $service->folio . ' / ' . ($service->insured_name ?? 'Sin asegurado'))
-	    	    ->success()
-	    	    ->sendToDatabase($user);
+	    	$user->notify(new NewServiceReceivedNotification($service));
 	    }
         }
     }
