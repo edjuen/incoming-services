@@ -120,9 +120,9 @@ class AxaService
 	{
 	    return [
 	        [
-	            "numeroExpediente" => "EXP-TEST-005",
-        	    "idServicio" => "2125",
-	            "idServicioProveedor" => "19",
+	            "numeroExpediente" => "EXP-TEST-006",
+        	    "idServicio" => "2126",
+	            "idServicioProveedor" => "20",
         	    "claveProveedor" => "4004",
 	            "marca" => "Nissan",
         	    "modelo" => "Versa",
