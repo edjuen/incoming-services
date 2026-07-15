@@ -301,14 +301,14 @@ public function contactService(Service $service): array
 	    $this->logIntegration([
 		    'service_id' => $service->id,
 		    'direction' => 'outgoing',
-		    'action' => 'accept',
-		    'endpoint' => '/status/Aceptacion',
+		    'action' => 'contact',
+		    'endpoint' => '/status/Contacto',
 		    'status_code' => 200,
 		    'success' => true,
 		    'request_payload' => $payload,
 		    'response_payload' => [
 		        'mock' => true,
-		        'message' => 'Aceptación simulada correctamente.',
+		        'message' => 'Contacto simulado correctamente.',
 		    ],
 		]);
 
@@ -410,7 +410,7 @@ public function finishService(Service $service): array
 		    'request_payload' => $payload,
 		    'response_payload' => [
 		        'mock' => true,
-		        'message' => 'Aceptación simulada correctamente.',
+		        'message' => 'Finalizacion simulada correctamente.',
 		    ],
 		]);
 
@@ -432,7 +432,7 @@ public function finishService(Service $service): array
 	$this->logIntegration([
 	    'service_id' => $service->id,
 	    'direction' => 'outgoing',
-	    'action' => 'accept',
+	    'action' => 'finish',
 	    'endpoint' => '/status/Finalizacion',
 	    'status_code' => $response->status(),
 	    'success' => true,
@@ -498,7 +498,7 @@ public function cancelService(Service $service, string $rejectCode): array
 		    'request_payload' => $payload,
 		    'response_payload' => [
 		        'mock' => true,
-		        'message' => 'Aceptación simulada correctamente.',
+		        'message' => 'Cancelacion simulada correctamente.',
 		    ],
 		]);
 
@@ -520,7 +520,7 @@ public function cancelService(Service $service, string $rejectCode): array
 	$this->logIntegration([
 	    'service_id' => $service->id,
 	    'direction' => 'outgoing',
-	    'action' => 'accept',
+	    'action' => 'cancel',
 	    'endpoint' => '/status/RechazoCancelacion',
 	    'status_code' => $response->status(),
 	    'success' => true,

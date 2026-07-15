@@ -29,6 +29,11 @@ class UserForm
 		    ->multiple()
 		    ->preload()
 		    ->searchable(),
+		TextInput::make('glpi_user_id')
+		    ->label('ID usuario GLPI')
+		    ->numeric()
+		    ->nullable()
+		    ->helperText('Captura aquí el ID del usuario correspondiente en GLPI.'),
             ]);
     }
 }

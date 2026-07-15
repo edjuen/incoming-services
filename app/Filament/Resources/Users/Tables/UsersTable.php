@@ -34,6 +34,11 @@ class UsersTable
 		    ->label('Roles')
 		    ->badge()
 		    ->separator(','),
+		TextColumn::make('glpi_user_id')
+		    ->label('GLPI ID')
+		    ->sortable()
+		    ->searchable()
+		    ->placeholder('—'),
             ])
             ->filters([
                 //

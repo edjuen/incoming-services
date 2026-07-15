@@ -363,7 +363,11 @@ class ServicesTable
                             if ($record->externalReferences()
                                 ->where('provider_name', 'AXA')
                                 ->exists()) {
-                                app(AxaService::class)->acceptService($record);
+                                $integration = $record->integrationProvider;
+				if (! $integration) {
+				    throw new \Exception('El servicio no tiene integración AXA asignada.');
+				}
+				(new AxaService($integration))->acceptService($record);
                             }
 
                             $record->update([
@@ -404,7 +408,11 @@ class ServicesTable
                             if ($record->externalReferences()
                                 ->where('provider_name', 'AXA')
                                 ->exists()) {
-                                app(AxaService::class)->contactService($record);
+                                $integration = $record->integrationProvider;
+				if (! $integration) {
+				    throw new \Exception('El servicio no tiene integración AXA asignada.');
+				}
+				(new AxaService($integration))->contactService($record);
                             }
 
                             $record->update([
@@ -435,7 +443,11 @@ class ServicesTable
                             if ($record->externalReferences()
                                 ->where('provider_name', 'AXA')
                                 ->exists()) {
-                                app(AxaService::class)->finishService($record);
+                                $integration = $record->integrationProvider;
+				if (! $integration) {
+				    throw new \Exception('El servicio no tiene integración AXA asignada.');
+				}
+				(new AxaService($integration))->finishService($record);
                             }
 
                             $record->update([
@@ -479,7 +491,11 @@ class ServicesTable
                             if ($record->externalReferences()
                                 ->where('provider_name', 'AXA')
                                 ->exists()) {
-                                app(AxaService::class)->cancelService($record, $data['reject_code']);
+                                $integration = $record->integrationProvider;
+				if (! $integration) {
+				    throw new \Exception('El servicio no tiene integración AXA asignada.');
+				}
+				(new AxaService($integration))->cancelService($record, $data['reject_code']);
                             }
 
                             $record->update([

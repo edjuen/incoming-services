@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\InsuranceCompany;
-use App\Models\ServiceType;
 
 class Service extends Model
 {
@@ -22,12 +20,26 @@ class Service extends Model
         'destination_coordinates',
         'vehicle',
         'status',
-	'operator_id',
-	'unit_id',
-	'estimated_arrival_minutes',
+        'operator_id',
+        'unit_id',
+        'estimated_arrival_minutes',
         'notes',
-	'integration_provider_id',
+        'integration_provider_id',
+
+        'glpi_ticket_id',
+        'glpi_migrated_at',
+        'glpi_migrated_by',
+        'glpi_migration_error',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'glpi_ticket_id' => 'integer',
+            'glpi_migrated_at' => 'datetime',
+            'glpi_migrated_by' => 'integer',
+        ];
+    }
 
     public function insuranceCompany()
     {
@@ -46,7 +58,7 @@ class Service extends Model
 
     public function integrationProvider()
     {
-	return $this->belongsTo(IntegrationProvider::class);
+        return $this->belongsTo(IntegrationProvider::class);
     }
 
     public function events()
@@ -61,79 +73,105 @@ class Service extends Model
 
     public function operator()
     {
-    	return $this->belongsTo(Operator::class);
+        return $this->belongsTo(Operator::class);
     }
 
     public function unit()
     {
-    	return $this->belongsTo(Unit::class);
+        return $this->belongsTo(Unit::class);
     }
 
-protected static function booted(): void
-{
-    static::created(function (Service $service) {
-        $service->events()->create([
-            'event_type' => 'system',
-            'title' => 'Servicio creado',
-            'description' => 'El servicio fue registrado en el sistema.',
-            'new_status' => $service->status,
-        ]);
-    });
+    public function glpiMigratedBy()
+    {
+        return $this->belongsTo(User::class, 'glpi_migrated_by');
+    }
 
-    static::updated(function (Service $service) {
-        if ($service->wasChanged('status')) {
+    public function glpiMigrationLogs()
+    {
+        return $this->hasMany(GlpiMigrationLog::class);
+    }
+
+    public function canBeMigratedToGlpi(): bool
+    {
+        return ! $this->glpi_ticket_id
+            && in_array($this->status, [
+                'accepted',
+                'on_route',
+                'on_scene',
+                'completed',
+                'cancelled',
+            ], true);
+    }
+
+    protected static function booted(): void
+    {
+        static::created(function (Service $service) {
             $service->events()->create([
-                'event_type' => 'status_change',
-                'title' => 'Cambio de estado',
-                'description' => 'El estado del servicio fue actualizado.',
-                'old_status' => $service->getOriginal('status'),
+                'event_type' => 'system',
+                'title' => 'Servicio creado',
+                'description' => 'El servicio fue registrado en el sistema.',
                 'new_status' => $service->status,
             ]);
-        }
-	if ($service->wasChanged('provider_id')) {
-	    $providerName = $service->provider?->name ?? 'Proveedor no especificado';
+        });
 
-	    $service->events()->create([
-	        'event_type' => 'assignment',
-	        'title' => 'Servicio asignado',
-	        'description' => 'El servicio fue asignado a: ' . $providerName,
-	        'old_status' => $service->getOriginal('status'),
-	        'new_status' => $service->status,
-	    ]);
-	}
-	if ($service->wasChanged('status')) {
-	    match ($service->status) {
-        	'assigned' =>
-	            $service->updateQuietly([
-        	        'assigned_at' => now(),
-	            ]),
-        	'accepted' =>
-	            $service->updateQuietly([
-        	        'accepted_at' => now(),
-	            ]),
-	        'on_route' =>
-        	    $service->updateQuietly([
-	                'on_route_at' => now(),
-	            ]),
-        	'on_scene' =>
-	            $service->updateQuietly([
-        	        'on_scene_at' => now(),
-	            ]),
-        	'completed' =>
-	            $service->updateQuietly([
-        	        'completed_at' => now(),
-	            ]),
-	        'cancelled' =>
-        	    $service->updateQuietly([
-	                'cancelled_at' => now(),
-	            ]),
+        static::updated(function (Service $service) {
+            if ($service->wasChanged('status')) {
+                $service->events()->create([
+                    'event_type' => 'status_change',
+                    'title' => 'Cambio de estado',
+                    'description' => 'El estado del servicio fue actualizado.',
+                    'old_status' => $service->getOriginal('status'),
+                    'new_status' => $service->status,
+                ]);
+            }
 
-	        default => null,
-	    };
-	}
+            if ($service->wasChanged('provider_id')) {
+                $providerName = $service->provider?->name ?? 'Proveedor no especificado';
 
-    });
-}
+                $service->events()->create([
+                    'event_type' => 'assignment',
+                    'title' => 'Servicio asignado',
+                    'description' => 'El servicio fue asignado a: ' . $providerName,
+                    'old_status' => $service->getOriginal('status'),
+                    'new_status' => $service->status,
+                ]);
+            }
 
+            if ($service->wasChanged('status')) {
+                match ($service->status) {
+                    'assigned' =>
+                        $service->updateQuietly([
+                            'assigned_at' => now(),
+                        ]),
 
+                    'accepted' =>
+                        $service->updateQuietly([
+                            'accepted_at' => now(),
+                        ]),
+
+                    'on_route' =>
+                        $service->updateQuietly([
+                            'on_route_at' => now(),
+                        ]),
+
+                    'on_scene' =>
+                        $service->updateQuietly([
+                            'on_scene_at' => now(),
+                        ]),
+
+                    'completed' =>
+                        $service->updateQuietly([
+                            'completed_at' => now(),
+                        ]),
+
+                    'cancelled' =>
+                        $service->updateQuietly([
+                            'cancelled_at' => now(),
+                        ]),
+
+                    default => null,
+                };
+            }
+        });
+    }
 }
