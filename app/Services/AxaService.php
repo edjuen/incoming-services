@@ -120,9 +120,9 @@ class AxaService
 	{
 	    return [
 	        [
-	            "numeroExpediente" => "EXP-TEST-006",
-        	    "idServicio" => "2126",
-	            "idServicioProveedor" => "20",
+	            "numeroExpediente" => "EXP-TEST-008",
+        	    "idServicio" => "2128",
+	            "idServicioProveedor" => "22",
         	    "claveProveedor" => "4004",
 	            "marca" => "Nissan",
         	    "modelo" => "Versa",
@@ -215,10 +215,10 @@ class AxaService
         $token = $this->getToken();
 
         $response = Http::withoutVerifying()
-            ->withToken($token)
-            ->post(rtrim($this->integration->base_url, '/') . '/status/Aceptacion', $payload);
+	    ->withToken($token)
+	    ->post(rtrim($this->integration->base_url, '/') . '/status/Aceptacion', $payload);
 
-        $response->throw();
+	$body = $response->json() ?? $response->body();
 
 	$this->logIntegration([
 	    'service_id' => $service->id,
@@ -226,10 +226,15 @@ class AxaService
 	    'action' => 'accept',
 	    'endpoint' => '/status/Aceptacion',
 	    'status_code' => $response->status(),
-	    'success' => true,
+	    'success' => $response->successful(),
 	    'request_payload' => $payload,
-	    'response_payload' => ['body' => $response->json() ?? $response->body(),],
+	    'response_payload' => [
+	        'body' => $body,
+	    ],
+	    'error_message' => $response->successful() ? null : $response->body(),
 	]);
+
+	$response->throw();
 
         $reference->update([
             'external_status' => 'accepted',

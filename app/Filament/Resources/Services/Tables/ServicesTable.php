@@ -43,51 +43,61 @@ class ServicesTable
                     }),
 
                 TextColumn::make('axa_acceptance_timer')
-                    ->label('Tiempo AXA')
-                    ->badge()
-                    ->getStateUsing(function ($record) {
-                        if (in_array($record->status, ['accepted', 'on_route', 'on_scene', 'completed'])) {
-                            return 'Aceptado';
-                        }
+		    ->label('Tiempo AXA')
+		    ->badge()
+		    ->getStateUsing(function ($record) {
+		        if (in_array($record->status, ['accepted', 'on_route', 'on_scene', 'completed'])) {
+		            return 'Aceptado';
+		        }
 
-                        if ($record->status === 'cancelled') {
-                            return 'Cancelado';
-                        }
+		        if ($record->status === 'cancelled') {
+		            return 'Cancelado';
+		        }
 
-                        $deadline = Carbon::parse($record->created_at)->addMinutes(2);
-                        $secondsLeft = (int) now()->diffInSeconds($deadline, false);
+		        $deadline = self::getAxaAcceptanceDeadline($record);
 
-                        if ($secondsLeft <= 0) {
-                            return 'Vencido';
-                        }
+		        if (! $deadline) {
+		            return 'N/A';
+		        }
 
-                        $minutes = floor($secondsLeft / 60);
-                        $seconds = $secondsLeft % 60;
+		        $secondsLeft = (int) now()->diffInSeconds($deadline, false);
+		
+		        if ($secondsLeft <= 0) {
+		            return 'Vencido';
+		        }
+		
+		        $minutes = floor($secondsLeft / 60);
+		        $seconds = $secondsLeft % 60;
 
-                        return sprintf('%02d:%02d', $minutes, $seconds);
-                    })
-                    ->color(function ($record): string {
-                        if (in_array($record->status, ['accepted', 'on_route', 'on_scene', 'completed'])) {
-                            return 'success';
-                        }
+		        return sprintf('%02d:%02d', $minutes, $seconds);
+		    })
+		    ->color(function ($record): string {
+		        if (in_array($record->status, ['accepted', 'on_route', 'on_scene', 'completed'])) {
+		            return 'success';
+		        }
 
-                        if ($record->status === 'cancelled') {
-                            return 'gray';
-                        }
+		        if ($record->status === 'cancelled') {
+		            return 'gray';
+		        }
 
-                        $deadline = Carbon::parse($record->created_at)->addMinutes(2);
-                        $secondsLeft = (int) now()->diffInSeconds($deadline, false);
+		        $deadline = self::getAxaAcceptanceDeadline($record);
+		
+		        if (! $deadline) {
+		            return 'gray';
+		        }
 
-                        if ($secondsLeft <= 0) {
-                            return 'danger';
-                        }
+		        $secondsLeft = (int) now()->diffInSeconds($deadline, false);
 
-                        if ($secondsLeft <= 60) {
-                            return 'warning';
-                        }
+		        if ($secondsLeft <= 0) {
+		            return 'danger';
+		        }
 
-                        return 'success';
-                    }),
+		        if ($secondsLeft <= 60) {
+		            return 'warning';
+		        }
+
+		        return 'success';
+		    }),
 
                 TextColumn::make('folio')
                     ->label('Folio')
@@ -363,6 +373,11 @@ class ServicesTable
                             if ($record->externalReferences()
                                 ->where('provider_name', 'AXA')
                                 ->exists()) {
+
+				$deadline = self::getAxaAcceptanceDeadline($record);
+				if ($deadline && now()->greaterThan($deadline)) {
+				    throw new \Exception('El tiempo máximo de aceptación AXA ya venció. No se debe aceptar para evitar empalme con otro proveedor.');
+				}
                                 $integration = $record->integrationProvider;
 				if (! $integration) {
 				    throw new \Exception('El servicio no tiene integración AXA asignada.');
@@ -523,4 +538,50 @@ class ServicesTable
                 ]),
             ]);
     }
+
+    protected static function getAxaAcceptanceDeadline($record): ?Carbon
+    {
+        if (! $record->created_at) {
+            return null;
+        }
+
+        $fallbackDeadline = Carbon::parse($record->created_at)->addMinutes(2);
+
+        $reference = $record->externalReferences()
+            ->where('provider_name', 'AXA')
+            ->first();
+
+        $payload = $reference?->payload ?? [];
+
+        if (is_string($payload)) {
+            $payload = json_decode($payload, true) ?: [];
+        }
+
+        $horaMaximaAceptacion = trim((string) ($payload['horaMaximaAceptacion'] ?? ''));
+
+        if ($horaMaximaAceptacion === '') {
+            return $fallbackDeadline;
+        }
+
+        try {
+            $createdAt = Carbon::parse($record->created_at);
+
+            $deadline = Carbon::parse(
+                $createdAt->format('Y-m-d') . ' ' . $horaMaximaAceptacion
+            );
+
+            /*
+             * Si AXA manda una hora como 00:01 y el servicio llegó 23:59,
+             * el límite pertenece al día siguiente.
+             */
+            if ($deadline->lessThan($createdAt->copy()->subMinutes(5))) {
+                $deadline->addDay();
+            }
+
+            return $deadline;
+        } catch (\Throwable $e) {
+            return $fallbackDeadline;
+        }
+    }
+
 }
