@@ -539,49 +539,85 @@ class ServicesTable
             ]);
     }
 
-    protected static function getAxaAcceptanceDeadline($record): ?Carbon
-    {
-        if (! $record->created_at) {
-            return null;
-        }
+	protected static function getAxaAcceptanceDeadline($record): ?Carbon
+	{
+	    if (! $record->created_at) {
+	        return null;
+	    }
+	    $timezone = config('app.timezone', 'America/Mexico_City');
+	    $createdAt = Carbon::parse($record->created_at)->timezone($timezone);
 
-        $fallbackDeadline = Carbon::parse($record->created_at)->addMinutes(2);
+	    // Respaldo: 2 minutos desde que nosotros recibimos el servicio.
+	    $fallbackDeadline = $createdAt->copy()->addMinutes(2);
 
-        $reference = $record->externalReferences()
-            ->where('provider_name', 'AXA')
-            ->first();
+	    $reference = $record->externalReferences()
+	        ->where('provider_name', 'AXA')
+	        ->first();
 
-        $payload = $reference?->payload ?? [];
+	    $payload = $reference?->payload ?? [];
 
-        if (is_string($payload)) {
-            $payload = json_decode($payload, true) ?: [];
-        }
+	    if (is_string($payload)) {
+	        $payload = json_decode($payload, true) ?: [];
+	    }
 
-        $horaMaximaAceptacion = trim((string) ($payload['horaMaximaAceptacion'] ?? ''));
+	    $horaMaximaAceptacion = trim((string) ($payload['horaMaximaAceptacion'] ?? ''));
 
-        if ($horaMaximaAceptacion === '') {
-            return $fallbackDeadline;
-        }
+	    if ($horaMaximaAceptacion === '') {
+	        return $fallbackDeadline;
+	    }
 
-        try {
-            $createdAt = Carbon::parse($record->created_at);
+	    try {
+	        /*
+	         * 1) Intento normal: AXA manda hora local.
+	         */
+        	$localCandidate = Carbon::parse(
+	            $createdAt->format('Y-m-d') . ' ' . $horaMaximaAceptacion,
+	            $timezone
+	        );
 
-            $deadline = Carbon::parse(
-                $createdAt->format('Y-m-d') . ' ' . $horaMaximaAceptacion
-            );
+	        if ($localCandidate->lessThan($createdAt->copy()->subMinutes(5))) {
+        	    $localCandidate->addDay();
+	        }
 
-            /*
-             * Si AXA manda una hora como 00:01 y el servicio llegó 23:59,
-             * el límite pertenece al día siguiente.
-             */
-            if ($deadline->lessThan($createdAt->copy()->subMinutes(5))) {
-                $deadline->addDay();
-            }
+        	/*
+	         * Si la hora queda razonablemente cerca de created_at,
+	         * la damos por buena.
+	         */
+	        if (
+	            $localCandidate->greaterThanOrEqualTo($createdAt->copy()->subMinutes(5)) &&
+	            $localCandidate->lessThanOrEqualTo($createdAt->copy()->addMinutes(10))
+	        ) {
+        	    return $localCandidate;
+	        }
 
-            return $deadline;
-        } catch (\Throwable $e) {
-            return $fallbackDeadline;
-        }
-    }
+        	/*
+	         * 2) Segundo intento: AXA manda hora en UTC.
+        	 * Esto corrige los casos donde aparecen 300+ minutos.
+	         */
+        	$utcCandidate = Carbon::parse(
+	            $createdAt->format('Y-m-d') . ' ' . $horaMaximaAceptacion,
+        	    'UTC'
+	        )->timezone($timezone);
+	
+        	if ($utcCandidate->lessThan($createdAt->copy()->subMinutes(5))) {
+	            $utcCandidate->addDay();
+        	}
+
+	        if (
+        	    $utcCandidate->greaterThanOrEqualTo($createdAt->copy()->subMinutes(5)) &&
+	            $utcCandidate->lessThanOrEqualTo($createdAt->copy()->addMinutes(10))
+        	) {
+	            return $utcCandidate;
+        	}
+
+	        /*
+        	 * 3) Si ninguna interpretación es lógica, usamos 2 minutos.
+	         */
+        	return $fallbackDeadline;
+
+	    } catch (\Throwable $e) {
+	        return $fallbackDeadline;
+	    }
+	}
 
 }
