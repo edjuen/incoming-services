@@ -24,7 +24,7 @@ class ServicesTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->poll('10s')
+            ->poll('4s')
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('status')
@@ -133,6 +133,36 @@ class ServicesTable
                     ->limit(35)
 		    ->toggleable(),
 
+
+		TextColumn::make('axa_color')
+		    ->label('Color')
+		    ->getStateUsing(fn ($record) => self::getAxaPayloadValue($record, 'color'))
+		    ->placeholder('N/A')
+		    ->toggleable(),
+
+		TextColumn::make('axa_cost')
+		    ->label('Costo AXA')
+		    ->getStateUsing(function ($record) {
+		        $cost = self::getAxaPayloadValue($record, 'costoServicio');
+		
+		        if ($cost === null || $cost === '') {
+		            return null;
+		        }
+		
+		        return '$' . number_format((float) $cost, 2);
+		    })
+		    ->placeholder('N/A')
+		    ->toggleable(),
+
+		TextColumn::make('axa_problem')
+		    ->label('Problema')
+		    ->getStateUsing(fn ($record) => self::getAxaPayloadValue($record, 'problema'))
+		    ->placeholder('N/A')
+		    ->limit(25)
+		    ->tooltip(fn ($record) => self::getAxaPayloadValue($record, 'problema'))
+		    ->toggleable(),
+
+	        /*
                 TextColumn::make('operator_full_name')
                     ->label('Operador')
                     ->getStateUsing(fn ($record) => $record->operator
@@ -150,6 +180,7 @@ class ServicesTable
                     )
                     ->placeholder('Sin unidad')
 		    ->toggleable(),
+                */
 
                 TextColumn::make('estimated_arrival_minutes')
                     ->label('ETA')
@@ -619,5 +650,20 @@ class ServicesTable
 	        return $fallbackDeadline;
 	    }
 	}
+
+protected static function getAxaPayloadValue($record, string $key): mixed
+{
+    $reference = $record->externalReferences()
+        ->where('provider_name', 'AXA')
+        ->first();
+
+    $payload = $reference?->payload ?? [];
+
+    if (is_string($payload)) {
+        $payload = json_decode($payload, true) ?: [];
+    }
+
+    return $payload[$key] ?? null;
+}
 
 }

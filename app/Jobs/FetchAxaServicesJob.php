@@ -69,7 +69,7 @@ class FetchAxaServicesJob implements ShouldQueue
                 'destination_coordinates' => isset($axaItem['latDireccionDestino'], $axaItem['lonDireccionDestino'])
                     ? $axaItem['latDireccionDestino'] . ',' . $axaItem['lonDireccionDestino']
                     : null,
-                'vehicle' => trim(($axaItem['marca'] ?? '') . ' ' . ($axaItem['modelo'] ?? '') . ' ' . ($axaItem['anio'] ?? '') . ' ' . ($axaItem['placas'] ?? '')),
+                'vehicle' => trim(($axaItem['marca'] ?? '') . ' ' . ($axaItem['modelo'] ?? '') . ' ' . ($axaItem['anio'] ?? '') . ' ' . ($axaItem['color'] ?? '') . ' ' . ($axaItem['placas'] ?? '')),
                 'status' => 'new',
                 'notes' => trim(($axaItem['problema'] ?? '') . "\n" . ($axaItem['comentarios'] ?? '')),
 		'integration_provider_id' => $integration->id,
